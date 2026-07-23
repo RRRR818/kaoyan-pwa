@@ -1,0 +1,22 @@
+{
+  "name": "考研助手 - 浙大机械工程备考",
+  "short_name": "考研助手",
+  "description": "考研学习计划、知识图谱与复习提醒",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f0f2f5",
+  "theme_color": "#1a73e8",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

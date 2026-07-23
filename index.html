@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#1a73e8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="考研助手">
+  <title>考研助手</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <!-- ===== 顶部标题栏 ===== -->
+  <header id="app-header">
+    <h1 id="header-title">考研助手</h1>
+    <span id="header-date"></span>
+  </header>
+
+  <!-- ===== 页面容器 ===== -->
+  <main id="app-content">
+    <!-- 首页-计划 -->
+    <section id="view-dashboard" class="view active">
+      <div class="section-title">📋 今日学习计划</div>
+      <div id="dashboard-content"></div>
+      <div id="dashboard-weak" class="card"></div>
+    </section>
+
+    <!-- 知识图谱 -->
+    <section id="view-knowledge" class="view">
+      <div class="section-title">🗺️ 知识图谱</div>
+      <div id="knowledge-content"></div>
+    </section>
+
+    <!-- 学习记录 -->
+    <section id="view-upload" class="view">
+      <div class="section-title">📷 学习记录</div>
+      <div id="upload-content"></div>
+    </section>
+
+    <!-- 复习提醒 -->
+    <section id="view-review" class="view">
+      <div class="section-title">🔔 复习提醒</div>
+      <div id="review-content"></div>
+    </section>
+  </main>
+
+  <!-- ===== 底部导航 ===== -->
+  <nav id="bottom-nav">
+    <button class="nav-btn active" data-view="dashboard">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">计划</span>
+    </button>
+    <button class="nav-btn" data-view="knowledge">
+      <span class="nav-icon">🗺️</span>
+      <span class="nav-label">图谱</span>
+    </button>
+    <button class="nav-btn" data-view="upload">
+      <span class="nav-icon">📷</span>
+      <span class="nav-label">记录</span>
+    </button>
+    <button class="nav-btn" data-view="review">
+      <span class="nav-icon">🔔</span>
+      <span class="nav-label">复习</span>
+      <span id="review-badge" class="badge hidden">0</span>
+    </button>
+  </nav>
+
+  <!-- ===== 图片预览弹窗 ===== -->
+  <div id="image-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <button class="modal-close">&times;</button>
+      <img id="modal-image" src="" alt="预览">
+    </div>
+  </div>
+
+  <!-- ===== Toast 提示 ===== -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- ===== JS 模块 ===== -->
+  <script src="js/db.js"></script>
+  <script src="js/seed-data.js"></script>
+  <script src="js/upload.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/knowledge-map.js"></script>
+  <script src="js/review.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
