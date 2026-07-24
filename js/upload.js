@@ -79,7 +79,7 @@ async function renderUpload() {
     <div class="card import-area">
       <div class="card-header"><span class="card-title">📥 导入分析结果</span></div>
       <p style="font-size:0.78rem;color:var(--color-text-secondary);margin-bottom:8px">
-        Claude 分析完成后，把返回的 JSON 粘贴到这里
+        支持创建新科目/章节（教材导入）或更新已有章节（错题分析）。粘贴 Claude 返回的 JSON：
       </p>
       <textarea id="import-json" placeholder='[{"chapterId": "math-2", "status": "in-progress", "masteryLevel": 2, "gaps": ["链式法则"], "suggestions": "建议..."}]'></textarea>
       <button class="btn btn-secondary btn-block" style="margin-top:8px" onclick="importAnalysis()">📥 导入并更新知识图谱</button>
@@ -296,11 +296,23 @@ async function importAnalysis() {
   try {
     const results = JSON.parse(raw);
     if (!Array.isArray(results)) throw new Error('需要数组格式');
+
+    let created = 0;
     let updated = 0;
+
     for (const r of results) {
+      // ---- 模式1：创建新科目 + 章节（教材导入）----
+      if (r.subject && r.subject.name && r.subject.chapters) {
+        await createSubjectFromImport(r.subject);
+        created++;
+        continue;
+      }
+
+      // ---- 模式2：更新已有章节（错题分析）----
       if (!r.chapterId) continue;
       const chapter = await dbGet('chapters', r.chapterId);
       if (!chapter) continue;
+
       if (r.status) chapter.status = r.status;
       if (r.masteryLevel !== undefined) chapter.masteryLevel = r.masteryLevel;
       chapter.lastReviewed = todayStr();
@@ -314,7 +326,12 @@ async function importAnalysis() {
       await saveToStore('chapters', chapter);
       updated++;
     }
-    showToast(`已更新 ${updated} 个章节 ✅`);
+
+    let msg = '';
+    if (created > 0) msg += `创建 ${created} 个科目 ✅ `;
+    if (updated > 0) msg += `更新 ${updated} 个章节 ✅`;
+    if (!msg) msg = '没有可导入的数据';
+    showToast(msg);
     document.getElementById('import-json').value = '';
     await renderUpload();
     await renderKnowledgeMap();
@@ -323,4 +340,97 @@ async function importAnalysis() {
     showToast('JSON 格式错误，请检查后重试');
     console.error(e);
   }
+}
+
+// 从导入 JSON 创建新科目和章节
+async function createSubjectFromImport(sub) {
+  const existing = await dbGetAll('subjects');
+  const maxOrder = existing.reduce((max, s) => Math.max(max, s.order || 0), 0);
+
+  const subject = {
+    id: 'import-' + Date.now(),
+    name: sub.name,
+    icon: sub.icon || '📚',
+    order: maxOrder + 1,
+    color: sub.color || '#1a73e8'
+  };
+  await saveToStore('subjects', subject);
+
+  // 创建章节
+  for (let i = 0; i < sub.chapters.length; i++) {
+    const chName = sub.chapters[i];
+    const chapter = {
+      id: subject.id + '-ch-' + (i + 1),
+      subjectId: subject.id,
+      name: chName,
+      status: 'unstarted',
+      masteryLevel: 0,
+      reviewStage: 0
+    };
+    await saveToStore('chapters', chapter);
+  }
+}
+
+// 更新提示词生成，教 Claude 输出正确格式
+function buildAnalysisPrompt(images, subjects, chapters) {
+  const today = todayStr();
+  const inProgress = chapters.filter(c => c.status !== 'unstarted').map(c => {
+    const sub = subjects.find(s => s.id === c.subjectId);
+    return `${sub ? sub.name : ''} - ${c.name} (${STATUS_MAP[c.status]?.label || '未知'})`;
+  }).join('、');
+
+  // 现有科目列表
+  const subjectList = subjects.map(s => `${s.icon} ${s.name} (ID: ${s.id})`).join('\n');
+  const chapterList = chapters.slice(0, 20).map(c => {
+    const sub = subjects.find(s => s.id === c.subjectId);
+    return `${sub ? sub.name : ''} > ${c.name} (ID: ${c.id})`;
+  }).join('\n');
+
+  return `请分析我今天的考研学习笔记（共 ${images.length} 张照片）。
+
+【我的背景】
+- 目标：考研备考（2027年12月考）
+- 当前阶段：基础阶段
+
+【当前学习进度】
+${inProgress || '各科均未开始'}
+
+【已有科目】
+${subjectList}
+
+【已有章节（前20个）】
+${chapterList}
+
+【请按以下 JSON 格式返回】
+
+## 如果是错题分析（更新已有章节）：
+[
+  {
+    "chapterId": "章节ID（见上方已有章节列表）",
+    "identifiedSubject": "科目名称",
+    "identifiedChapter": "章节名称",
+    "correctness": "correct/partial/incorrect",
+    "gaps": ["发现的知识漏洞"],
+    "suggestions": "学习建议"
+  }
+]
+
+## 如果是导入教材（创建新科目和章节）：
+[
+  {
+    "subject": {
+      "name": "机械设计基础",
+      "icon": "🔧",
+      "color": "#2ecc71",
+      "chapters": [
+        "第一章 绪论",
+        "第二章 机械零件设计概论",
+        "第三章 连接",
+        "...所有章节按顺序列出..."
+      ]
+    }
+  }
+]
+
+两种格式可以混在同一个 JSON 数组里。请根据照片内容选择正确的格式。`;
 }
