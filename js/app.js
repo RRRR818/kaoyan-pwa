@@ -232,8 +232,8 @@ async function handleAuth() {
       // 登录成功 → initMainApp 由 onAuthStateChange 触发
     }
   } catch (e) {
-    showAuthError('网络错误，请检查连接');
-    console.error(e);
+    console.error('认证错误:', e);
+    showAuthError('连接失败: ' + (e.message || '未知错误'));
   }
 
   btn.disabled = false;
