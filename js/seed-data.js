@@ -75,11 +75,11 @@ async function checkAndSeed() {
 
   // 如果用户已登录且有 Supabase，数据会从云端拉取，不需要本地播种
   let hasRemoteData = false;
-  if (isOnline() && typeof supabase !== 'undefined') {
+  if (isOnline() && typeof supabaseClient !== 'undefined') {
     try {
       const user = await getCurrentUser();
       if (user) {
-        const { data } = await supabase.from('subjects').select('id').limit(1);
+        const { data } = await supabaseClient.from('subjects').select('id').limit(1);
         if (data && data.length > 0) hasRemoteData = true;
       }
     } catch (e) { /* 忽略 */ }

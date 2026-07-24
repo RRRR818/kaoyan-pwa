@@ -282,8 +282,8 @@ async function completeOnboarding() {
 
   try {
     // 保存 profile 到 Supabase
-    if (user && typeof supabase !== 'undefined') {
-      await supabase.from('profiles').upsert({
+    if (user && typeof supabaseClient !== 'undefined') {
+      await supabaseClient.from('profiles').upsert({
         id: user.id,
         display_name: onboardingData.displayName,
         target_school: onboardingData.targetSchool,
@@ -359,8 +359,8 @@ async function startOnboarding() {
 
   // 读取现有数据预填充
   const user = await getCurrentUser();
-  if (user && typeof supabase !== 'undefined') {
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  if (user && typeof supabaseClient !== 'undefined') {
+    const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', user.id).single();
     if (profile) {
       onboardingData.displayName = profile.display_name || '';
       onboardingData.targetSchool = profile.target_school || '';

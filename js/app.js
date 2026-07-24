@@ -7,7 +7,7 @@ let authMode = 'login'; // 'login' | 'register'
 
 async function initApp() {
   // 检查 Supabase SDK 是否已加载
-  if (typeof supabase === 'undefined') {
+  if (typeof supabaseClient === 'undefined') {
     console.warn('Supabase SDK 未加载，使用纯本地模式');
   }
 
@@ -31,8 +31,8 @@ async function initApp() {
   });
 
   // 监听认证状态变化
-  if (typeof supabase !== 'undefined') {
-    supabase.auth.onAuthStateChange(async (event, session) => {
+  if (typeof supabaseClient !== 'undefined') {
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
         await initMainApp();
       } else if (event === 'SIGNED_OUT') {
@@ -169,7 +169,7 @@ async function handleAuth() {
     return;
   }
 
-  if (typeof supabase === 'undefined') {
+  if (typeof supabaseClient === 'undefined') {
     showAuthError('未连接到服务器，请使用"跳过登录"模式');
     return;
   }
@@ -186,7 +186,7 @@ async function handleAuth() {
         return;
       }
       // 注册
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await supabaseClient.auth.signUp({
         email,
         password,
         options: {
@@ -205,7 +205,7 @@ async function handleAuth() {
       }
       // 更新 profile
       if (data.user) {
-        await supabase.from('profiles').upsert({
+        await supabaseClient.from('profiles').upsert({
           id: data.user.id,
           display_name: displayName
         });
@@ -216,7 +216,7 @@ async function handleAuth() {
       updateAuthUI();
     } else {
       // 登录
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
           showAuthError('邮箱或密码错误');
@@ -260,7 +260,7 @@ async function renderAuthStatus() {
   try {
     user = await getCurrentUser();
     if (user) {
-      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      const { data } = await supabaseClient.from('profiles').select('*').eq('id', user.id).single();
       profile = data;
     }
   } catch (e) {
@@ -311,8 +311,8 @@ function toggleUserMenu() {
 }
 
 async function handleLogout() {
-  if (typeof supabase !== 'undefined') {
-    await supabase.auth.signOut();
+  if (typeof supabaseClient !== 'undefined') {
+    await supabaseClient.auth.signOut();
   }
   // onAuthStateChange 会自动调用 showAuthView
 }

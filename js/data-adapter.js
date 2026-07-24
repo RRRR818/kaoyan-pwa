@@ -22,7 +22,7 @@ async function saveToStore(storeName, data) {
   const id = await dbPut(storeName, data);
 
   // 如果在线且有 Supabase，同步写入云端
-  if (isOnline() && typeof supabase !== 'undefined') {
+  if (isOnline() && typeof supabaseClient !== 'undefined') {
     try {
       const tableName = STORE_TO_TABLE[storeName] || storeName;
       const user = await getCurrentUser();
@@ -33,20 +33,20 @@ async function saveToStore(storeName, data) {
 
       // daily_plans 表的 upsert key 是 (user_id, date)
       if (tableName === 'daily_plans') {
-        await supabase.from(tableName).upsert(row, { onConflict: 'user_id,date' });
+        await supabaseClient.from(tableName).upsert(row, { onConflict: 'user_id,date' });
       } else if (tableName === 'settings') {
-        await supabase.from(tableName).upsert(row, { onConflict: 'user_id,key' });
+        await supabaseClient.from(tableName).upsert(row, { onConflict: 'user_id,key' });
       } else if (tableName === 'subjects' || tableName === 'chapters') {
         // 这些表的 PK 是 (user_id, id)，id 由业务代码生成（如 'math-1'）
-        await supabase.from(tableName).upsert(row, { onConflict: 'user_id,id' });
+        await supabaseClient.from(tableName).upsert(row, { onConflict: 'user_id,id' });
       } else {
-        await supabase.from(tableName).upsert(row);
+        await supabaseClient.from(tableName).upsert(row);
       }
     } catch (e) {
       console.warn('Supabase 写入失败，数据仅在本地:', e.message);
       await enqueueSyncOp(storeName, 'put', data);
     }
-  } else if (isOnline() && typeof supabase === 'undefined') {
+  } else if (isOnline() && typeof supabaseClient === 'undefined') {
     // Supabase 未配置，仅本地
   } else {
     // 离线 → 加入同步队列
@@ -59,10 +59,10 @@ async function saveToStore(storeName, data) {
 async function deleteFromStore(storeName, id) {
   await dbDelete(storeName, id);
 
-  if (isOnline() && typeof supabase !== 'undefined') {
+  if (isOnline() && typeof supabaseClient !== 'undefined') {
     try {
       const tableName = STORE_TO_TABLE[storeName] || storeName;
-      await supabase.from(tableName).delete().eq('id', id);
+      await supabaseClient.from(tableName).delete().eq('id', id);
     } catch (e) {
       await enqueueSyncOp(storeName, 'delete', { id });
     }
@@ -87,7 +87,7 @@ async function enqueueSyncOp(storeName, operation, data) {
 }
 
 async function flushSyncQueue() {
-  if (!isOnline() || typeof supabase === 'undefined') return;
+  if (!isOnline() || typeof supabaseClient === 'undefined') return;
 
   const queue = await dbGetAll('syncQueue');
   if (!queue.length) return;
@@ -106,16 +106,16 @@ async function flushSyncQueue() {
 
       if (item.operation === 'put') {
         if (tableName === 'daily_plans') {
-          await supabase.from(tableName).upsert(row, { onConflict: 'user_id,date' });
+          await supabaseClient.from(tableName).upsert(row, { onConflict: 'user_id,date' });
         } else if (tableName === 'settings') {
-          await supabase.from(tableName).upsert(row, { onConflict: 'user_id,key' });
+          await supabaseClient.from(tableName).upsert(row, { onConflict: 'user_id,key' });
         } else if (tableName === 'subjects' || tableName === 'chapters') {
-          await supabase.from(tableName).upsert(row, { onConflict: 'user_id,id' });
+          await supabaseClient.from(tableName).upsert(row, { onConflict: 'user_id,id' });
         } else {
-          await supabase.from(tableName).upsert(row);
+          await supabaseClient.from(tableName).upsert(row);
         }
       } else if (item.operation === 'delete') {
-        await supabase.from(tableName).delete().eq('id', data.id);
+        await supabaseClient.from(tableName).delete().eq('id', data.id);
       }
 
       await dbDelete('syncQueue', item.id);
@@ -129,7 +129,7 @@ async function flushSyncQueue() {
 // ---- 从 Supabase 拉取全量数据 ----
 
 async function pullAllFromSupabase() {
-  if (!isOnline() || typeof supabase === 'undefined') return;
+  if (!isOnline() || typeof supabaseClient === 'undefined') return;
   const user = await getCurrentUser();
   if (!user) return;
 
@@ -138,7 +138,7 @@ async function pullAllFromSupabase() {
 
   for (let i = 0; i < tables.length; i++) {
     try {
-      const { data, error } = await supabase.from(tables[i]).select('*');
+      const { data, error } = await supabaseClient.from(tables[i]).select('*');
       if (error) { console.warn(`拉取 ${tables[i]} 失败:`, error.message); continue; }
       if (!data || !data.length) continue;
 
