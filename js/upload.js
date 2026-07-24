@@ -157,7 +157,7 @@ async function handleImageSelect(event) {
       date: todayStr(),
       analyzed: false
     };
-    await dbPut('images', imgRecord);
+    await saveToStore('images', imgRecord);
     showToast('照片已保存 ✅');
     await renderUpload();
   } catch (e) {
@@ -244,7 +244,7 @@ async function submitManualLog() {
     notes: notes || null,
     sourceImageIds: null
   };
-  await dbPut('studyLogs', logEntry);
+  await saveToStore('studyLogs', logEntry);
 
   // 如果选了章节，更新章节状态
   if (chapterId) {
@@ -256,7 +256,7 @@ async function submitManualLog() {
       chapter.nextReview = formatDate(addDays(new Date(), 1));
       chapter.reviewInterval = 1;
       chapter.reviewStage = 1;
-      await dbPut('chapters', chapter);
+      await saveToStore('chapters', chapter);
     }
   }
 
@@ -311,7 +311,7 @@ async function importAnalysis() {
       if (r.gaps || r.suggestions) {
         chapter.notes = (chapter.notes || '') + `\n[${todayStr()}] 薄弱点: ${(r.gaps || []).join(', ')}; 建议: ${r.suggestions || ''}`;
       }
-      await dbPut('chapters', chapter);
+      await saveToStore('chapters', chapter);
       updated++;
     }
     showToast(`已更新 ${updated} 个章节 ✅`);

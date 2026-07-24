@@ -73,16 +73,33 @@ async function checkAndSeed() {
   const seeded = await getSetting('seeded');
   if (seeded) return;
 
-  // 插入科目
-  for (const s of SEED_SUBJECTS) { await dbPut('subjects', s); }
-  // 插入章节
-  for (const c of SEED_CHAPTERS) { await dbPut('chapters', c); }
-  // 生成今日计划（如果还没有）
+  // 如果用户已登录且有 Supabase，数据会从云端拉取，不需要本地播种
+  let hasRemoteData = false;
+  if (isOnline() && typeof supabase !== 'undefined') {
+    try {
+      const user = await getCurrentUser();
+      if (user) {
+        const { data } = await supabase.from('subjects').select('id').limit(1);
+        if (data && data.length > 0) hasRemoteData = true;
+      }
+    } catch (e) { /* 忽略 */ }
+  }
+
+  if (hasRemoteData) {
+    // 云端有数据，标记已播种（数据会在 pullAllFromSupabase 中拉取）
+    await setSetting('seeded', true);
+    return;
+  }
+
+  // 离线/跳过登录模式 → 用硬编码默认数据播种
+  for (const s of SEED_SUBJECTS) { await saveToStore('subjects', s); }
+  for (const c of SEED_CHAPTERS) { await saveToStore('chapters', c); }
+
   const plan = await getTodayPlan();
   if (!plan) {
-    await dbPut('dailyPlan', generateDailyPlanTemplate());
+    await saveToStore('dailyPlan', generateDailyPlanTemplate());
   }
-  // 默认设置
+
   await setSetting('dailyHours', 5);
   await setSetting('seeded', true);
 }

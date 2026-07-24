@@ -112,9 +112,9 @@ async function quickUpdateChapter(chapterId) {
   chapter.nextReview = formatDate(addDays(new Date(), chapter.reviewInterval));
   chapter.reviewStage = statuses.indexOf(next);
 
-  await dbPut('chapters', chapter);
+  await saveToStore('chapters', chapter);
   // 添加学习日志
-  await dbPut('studyLogs', {
+  await saveToStore('studyLogs', {
     date: todayStr(),
     subjectId: chapter.subjectId,
     chapterId: chapter.id,

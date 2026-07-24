@@ -1,6 +1,6 @@
 /* ===== IndexedDB 数据库封装 ===== */
 const DB_NAME = 'kaoyan-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let db = null;
 
@@ -31,6 +31,11 @@ function openDB() {
       }
       if (!d.objectStoreNames.contains('analysisResults')) {
         d.createObjectStore('analysisResults', { keyPath: 'id', autoIncrement: true });
+      }
+      if (!d.objectStoreNames.contains('syncQueue')) {
+        const sqStore = d.createObjectStore('syncQueue', { keyPath: 'id', autoIncrement: true });
+        sqStore.createIndex('storeName', 'storeName', { unique: false });
+        sqStore.createIndex('timestamp', 'timestamp', { unique: false });
       }
     };
     req.onsuccess = (e) => { db = e.target.result; resolve(db); };

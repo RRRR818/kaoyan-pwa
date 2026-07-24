@@ -127,7 +127,7 @@ async function toggleTask(subjectId, taskIndex) {
   const task = plan.tasks[taskIndex];
   if (!task) return;
   task.completed = !task.completed;
-  await dbPut('dailyPlan', plan);
+  await saveToStore('dailyPlan', plan);
   await renderDashboard();
 }
 

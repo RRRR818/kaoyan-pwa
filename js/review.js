@@ -140,10 +140,10 @@ async function doReview(chapterId, passed) {
   if (!chapter.reviewHistory) chapter.reviewHistory = [];
   chapter.reviewHistory.push({ date: today, score: passed ? 1 : 0 });
 
-  await dbPut('chapters', chapter);
+  await saveToStore('chapters', chapter);
 
   // 添加学习日志
-  await dbPut('studyLogs', {
+  await saveToStore('studyLogs', {
     date: today,
     subjectId: chapter.subjectId,
     chapterId: chapter.id,

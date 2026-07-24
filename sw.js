@@ -1,9 +1,12 @@
-const CACHE_NAME = 'kaoyan-v1';
+const CACHE_NAME = 'kaoyan-v2';
 const STATIC_ASSETS = [
   '.',
   'index.html',
   'css/app.css',
+  'js/supabase-config.js',
   'js/db.js',
+  'js/data-adapter.js',
+  'js/onboarding.js',
   'js/seed-data.js',
   'js/app.js',
   'js/dashboard.js',

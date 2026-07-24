@@ -21,8 +21,49 @@
 
   <!-- ===== 页面容器 ===== -->
   <main id="app-content">
+    <!-- 登录/注册 -->
+    <section id="view-auth" class="view active">
+      <div class="auth-container">
+        <div class="auth-card">
+          <div class="auth-logo">🎓</div>
+          <h2 class="auth-title">考研助手</h2>
+          <p class="auth-subtitle" id="auth-subtitle">登录你的账号</p>
+          <form id="auth-form" onsubmit="return false;">
+            <div class="auth-field">
+              <label>邮箱</label>
+              <input type="email" id="auth-email" placeholder="your@email.com" required autocomplete="email">
+            </div>
+            <div class="auth-field">
+              <label>密码</label>
+              <input type="password" id="auth-password" placeholder="至少 6 位密码" required minlength="6" autocomplete="current-password">
+            </div>
+            <div class="auth-field" id="auth-display-name-field" style="display:none">
+              <label>昵称</label>
+              <input type="text" id="auth-display-name" placeholder="你的名字" autocomplete="name">
+            </div>
+            <div id="auth-error" class="auth-error hidden"></div>
+            <button type="submit" class="btn btn-primary btn-block" id="auth-submit-btn" onclick="handleAuth()">登 录</button>
+          </form>
+          <div class="auth-switch">
+            <span id="auth-switch-text">还没有账号？</span>
+            <button class="auth-switch-btn" id="auth-switch-btn" onclick="toggleAuthMode()">注册新账号</button>
+          </div>
+          <button class="btn btn-sm btn-secondary btn-block" id="auth-skip-btn" onclick="skipAuth()" style="margin-top:8px">跳过登录，本地使用</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 引导页（首次登录） -->
+    <section id="view-onboarding" class="view">
+      <div class="onboarding-container">
+        <div class="card">
+          <div id="onboarding-content"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- 首页-计划 -->
-    <section id="view-dashboard" class="view active">
+    <section id="view-dashboard" class="view">
       <div class="section-title">📋 今日学习计划</div>
       <div id="dashboard-content"></div>
       <div id="dashboard-weak" class="card"></div>
@@ -80,8 +121,14 @@
   <!-- ===== Toast 提示 ===== -->
   <div id="toast" class="toast hidden"></div>
 
+  <!-- ===== Supabase SDK ===== -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/supabase-config.js"></script>
+
   <!-- ===== JS 模块 ===== -->
   <script src="js/db.js"></script>
+  <script src="js/data-adapter.js"></script>
+  <script src="js/onboarding.js"></script>
   <script src="js/seed-data.js"></script>
   <script src="js/upload.js"></script>
   <script src="js/dashboard.js"></script>
